@@ -19,6 +19,8 @@
 #include <time.h>
 #include <sys/time.h>
 
+#include <chrono>
+
 #define MAX_SHARED_SIZE 2048
 #define BLOCK_SIZE_X 1024
 
@@ -53,6 +55,8 @@ GpuEuclideanCluster::GpuEuclideanCluster()
 
 void GpuEuclideanCluster::setInputPoints(float *x, float *y, float *z, int size)
 {
+  std::chrono::time_points<std::chrono::system_clock> start, end;
+  start = std::chrono::system_clock::now();
   size_ = size;
   checkCudaErrors(cudaMalloc(&x_, size_ * sizeof(float)));
   checkCudaErrors(cudaMalloc(&y_, size_ * sizeof(float)));
@@ -61,6 +65,14 @@ void GpuEuclideanCluster::setInputPoints(float *x, float *y, float *z, int size)
   checkCudaErrors(cudaMemcpy(x_, x, size_ * sizeof(float), cudaMemcpyHostToDevice));
   checkCudaErrors(cudaMemcpy(y_, y, size_ * sizeof(float), cudaMemcpyHostToDevice));
   checkCudaErrors(cudaMemcpy(z_, z, size_ * sizeof(float), cudaMemcpyHostToDevice));
+
+  checkCudaErrors(cudaDeviceSynchronize());
+  end = std::chrono::system_clock::now();
+  double time = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
+
+  FILE *fp = fopen("memcpy_euc.csv", "a");
+  fprintf(fp, "%lf\n", time);
+  fclose(fp);
 
   checkCudaErrors(cudaMalloc(&cluster_indices_, size_ * sizeof(int)));
   cluster_indices_host_ = (int *) malloc(size_ * sizeof(int));

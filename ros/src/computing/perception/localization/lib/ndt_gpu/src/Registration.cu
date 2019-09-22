@@ -2,6 +2,8 @@
 #include "ndt_gpu/debug.h"
 #include <iostream>
 
+#include <chrono>
+
 namespace gpu {
 
 GRegistration::GRegistration()
@@ -169,12 +171,25 @@ void GRegistration::setInputSource(pcl::PointCloud<pcl::PointXYZI>::Ptr input)
 
 		pcl::PointXYZI *host_tmp = input->points.data();
 
+		std::chrono::time_point<std::chrono::system_clock> start, end;
+
+		start = std::chrono::system_clock::now();
+
 		// Pin the host buffer for accelerating the memory copy
 #ifndef __aarch64__
 		checkCudaErrors(cudaHostRegister(host_tmp, sizeof(pcl::PointXYZI) * points_number_, cudaHostRegisterDefault));
 #endif
 
 		checkCudaErrors(cudaMemcpy(tmp, host_tmp, sizeof(pcl::PointXYZI) * points_number_, cudaMemcpyHostToDevice));
+
+		checkCudaErrors(cudaDeviceSynchronize());
+
+		end = std::chrono::system_clock::now();
+		double time = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() / 1000.0;
+
+		FILE *fp = fopen("memcpy_ndt.csv", "a");
+		fprintf(fp, "%lf\n", time);
+		fclose(fp);
 
 		if (x_ != NULL) {
 			checkCudaErrors(cudaFree(x_));
