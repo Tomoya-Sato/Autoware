@@ -32,6 +32,9 @@ public:
   void extractClusters2();
   std::vector<GClusterIndex> getOutput();
 
+  void getHandle(unsigned char *buf);
+  void debug(int size);
+
   SamplePointListXYZ generateSample();
 
   ~GpuEuclideanCluster();
@@ -45,6 +48,8 @@ private:
   int min_cluster_pts_;
   int max_cluster_pts_;
   int cluster_num_;
+
+  float *ipc_x_, *ipc_y_, *ipc_z_;
 
   void exclusiveScan(int* input, int ele_num, int* sum);
 };

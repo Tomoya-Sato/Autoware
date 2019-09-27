@@ -825,6 +825,23 @@ std::vector <GpuEuclideanCluster::GClusterIndex> GpuEuclideanCluster::getOutput(
   return cluster_indices;
 }
 
+void GpuEuclideanCluster::getHandle(unsigned char *buf)
+{
+  cudaIpcMemHandle_t my_handle;
+  memcpy((unsigned char*)&my_handle, buf, sizeof(my_handle));
+
+  checkCudaErrors(cudaIpcOpenMemHandle((void**)&ipc_input_, my_handle, cudaIpcMemLazyEnablePeerAccess));
+}
+
+void GpuEuclideanCluster::debug(int size)
+{
+  pcl::PointXYZ *tmp = malloc(sizeof(pcl::PointXYZ)*size);
+  checkCudaErrors(cudaMemcpy(tmp, ipc_input_, sizeof(pcl::PointXYZ)*size, cudaMemcpyDeviceToHost));
+
+  std::cout << "Debug print: " << tmp[0].x << ", " << tmp[0].y << ", " << tmp[1].z << std::endl;
+  free(tmp);
+}
+
 /* Generate sparse points.
  * The number of points is fixed at 10000.
  * Cannot afford more (e.g. 100 000 points) since
@@ -862,4 +879,3 @@ GpuEuclideanCluster::~GpuEuclideanCluster()
   checkCudaErrors(cudaFree(cluster_indices_));
   free(cluster_indices_host_);
 }
-
