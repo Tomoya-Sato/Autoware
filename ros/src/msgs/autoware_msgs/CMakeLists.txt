@@ -69,6 +69,8 @@ add_message_files(
 
             ## Remote Control
             RemoteCmd.msg
+
+            gpu_handle.msg
 )
 
 ## Generate added messages and services with any dependencies listed here
