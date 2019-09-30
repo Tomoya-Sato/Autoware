@@ -427,4 +427,21 @@ void GRegistration::computeTransformation(const Eigen::Matrix<float, 4, 4> &gues
 	printf("Unsupported by Registration\n");
 }
 
+void GRegistration::getHandle(unsigned char *buf)
+{
+	cudaIpcMemHandle_t my_handle;
+	memcpy((unsigned char*)&my_handle, buf, sizeof(my_handle));
+
+	checkCudaErrors(cudaIpcOpenMemHandle((void**)&ipc_input_, my_handle, cudaIpcMemLazyEnablePeerAccess));
+}
+
+void GRegistration::debug(int size)
+{
+	pcl::PointXYZ *tmp = malloc(sizeof(pcl::PointXYZ)*size);
+	checkCudaErrors(cudaMemcpy(tmp, ipc_input_, sizeof(pcl::PointXYZ)*size, cudaMemcpyDeviceToHost));
+
+	std::cout << "Debug print: " << tmp[0].x << ", " << tmp[0].y << ", " << tmp[0].z << std::endl;
+	free(tmp);
+}
+
 }
